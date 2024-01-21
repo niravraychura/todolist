@@ -3,6 +3,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -51,6 +52,56 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	renderTemplate(w, "index", tasks)
 }
+func deletePageHandler(w http.ResponseWriter, r *http.Request) {
+	rows, err := database.Query("SELECT id, description FROM tasks")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var tasks []Task
+	for rows.Next() {
+		var task Task
+		err := rows.Scan(&task.ID, &task.Description)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tasks = append(tasks, task)
+	}
+
+	renderTemplate(w, "delete", tasks)
+}
+
+func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		var tasksToDelete []string
+
+		if err := json.NewDecoder(r.Body).Decode(&tasksToDelete); err != nil {
+			http.Error(w, "Error decoding JSON data", http.StatusBadRequest)
+			return
+		}
+
+		if len(tasksToDelete) == 0 {
+			http.Error(w, "No tasks selected for deletion", http.StatusBadRequest)
+			return
+		}
+
+		// Loop through tasksToDelete and delete each task
+		for _, id := range tasksToDelete {
+			_, err := database.Exec("DELETE FROM tasks WHERE id = ?", id)
+			if err != nil {
+				log.Printf("Error deleting task with ID %s: %s", id, err.Error())
+				http.Error(w, fmt.Sprintf("Error deleting task with ID %s", id), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+}
 
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
@@ -68,15 +119,32 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	tmplFiles := []string{"templates/" + tmpl + ".html", "templates/layout.html"}
-	t, err := template.ParseFiles(tmplFiles...)
+	tmplParsed, err := template.ParseFiles(tmplFiles...)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = t.ExecuteTemplate(w, "layout", data)
+	err = tmplParsed.ExecuteTemplate(w, "layout.html", data)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func updateTaskStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		id := r.FormValue("id")
+		completed := r.FormValue("completed") == "true"
+
+		_, err := database.Exec("UPDATE tasks SET completed = ? WHERE id = ?", completed, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 }
 
 type Task struct {
@@ -86,8 +154,13 @@ type Task struct {
 }
 
 func main() {
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/add", addTaskHandler)
+	http.HandleFunc("/update", updateTaskStatusHandler)
+	http.HandleFunc("/delete", deleteTaskHandler)
+	http.HandleFunc("/delete-page", deletePageHandler)
 	fmt.Println("Server is running on :8080")
 	http.ListenAndServe(":8080", nil)
 }

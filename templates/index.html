@@ -1,7 +1,47 @@
 {{ define "content" }}
-    <ul>
+    
+    <ul id="taskList">
         {{ range . }}
-            <li>{{.Description}}</li>
+            <li>
+                <input type="checkbox" id="task_{{.ID}}" {{if .Completed}}checked{{end}}>
+                <label for="task_{{.ID}}" class="{{if .Completed}}completed{{end}}">{{.Description}}</label>
+            </li>
         {{ end }}
     </ul>
+    <button onclick="window.location.href='/add'">Add Task</button>
+    <button onclick="window.location.href='/delete-page'">Delete Tasks</button>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const id = this.id.split('_')[1];
+                    const completed = this.checked;
+
+                    fetch('/update', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `id=${id}&completed=${completed ? "true" : "false"}`,
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        
+                        // Optionally handle success response
+                        const label = document.querySelector(`label[for="task_${id}"]`);
+                        label.classList.toggle('completed', completed);
+                    }).catch(error => {
+                        console.error('Fetch error:', error);
+                    });
+                });
+            });
+        });
+    </script>
+    <style>
+        .completed {
+            text-decoration: line-through;
+        }
+    </style>
 {{ end }}

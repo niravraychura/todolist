@@ -1,0 +1,49 @@
+{{ define "content" }}
+    <link rel="stylesheet" href="/static/styles.css">
+    <h2>Delete Tasks</h2>
+    <form action="/delete" method="post" id="deleteForm">
+        <ul>
+            {{ range . }}
+                <li>
+                    <label>
+                        <input type="checkbox" name="tasksToDelete" value="{{.ID}}">
+                        {{.Description}}
+                    </label>
+                </li>
+            {{ end }}
+        </ul>
+        <button type="button" onclick="deleteSelectedTasks()">Delete Selected Tasks</button>
+    </form>
+
+    <script>
+        function deleteSelectedTasks() {
+            const checkboxes = document.querySelectorAll('input[name="tasksToDelete"]:checked');
+            const tasksToDelete = Array.from(checkboxes).map(checkbox => checkbox.value);
+
+            if (tasksToDelete.length === 0) {
+                alert("Please select at least one task to delete.");
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete the selected tasks?')) {
+                fetch('/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(tasksToDelete),
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    // Optionally handle success response
+                    window.location.href = '/'; // Redirect to the home page after deletion
+                }).catch(error => {
+                    console.error('Fetch error:', error);
+                    alert('An error occurred while deleting tasks.');
+                });
+            }
+        }
+    </script>
+{{ end }}

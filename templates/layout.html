@@ -1,11 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ToDo List</title>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/styles.css">
+        <title>ToDo List</title>
+    
+    
+
+    <script>
+       
+        function updateTaskStatus(id) {
+            const checkbox = document.querySelector(`input[type="checkbox"][data-id="${id}"]`);
+            const completed = checkbox.checked;
+
+            fetch('/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id=${id}&completed=${completed ? "true" : "false"}`,
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                // Optionally handle success response
+            }).catch(error => {
+                console.error('Fetch error:', error);
+            });
+        }
+    </script>
 </head>
 <body>
+    
     <header>
         <h1>ToDo List</h1>
     </header>
