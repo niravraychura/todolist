@@ -77,9 +77,10 @@ workflows:
     jobs:
       - build
       - sonarqube_analysis
-      - dockerize:
           requires:
             - build
+      - dockerize:
+          requires:
             - sonarqube_analysis
           filters:
             branches:
