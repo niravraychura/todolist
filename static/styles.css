@@ -38,7 +38,7 @@ li {
 label {
     display: flex;
     align-items: center;
-    width: 100%; /* Take up the entire width */
+    width: 100%; /* Take up the entire width  */
 }
 
 input[type="checkbox"] {
