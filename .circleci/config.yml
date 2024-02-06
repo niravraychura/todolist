@@ -76,7 +76,7 @@ workflows:
   build_and_dockerize:
     jobs:
       - build
-      - sonarqube_analysis
+      - sonarqube_analysis:
           requires:
             - build
       - dockerize:
