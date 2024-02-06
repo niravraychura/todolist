@@ -36,8 +36,8 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            docker build -t niravraychura/todolist:$CIRCLE_BUILD_NUM .
-            docker tag niravraychura/todolist:$CIRCLE_BUILD_NUM niravraychura/todolist:latest
+            docker build -t raychuranirav/todolist:$CIRCLE_BUILD_NUM .
+            docker tag raychuranirav/todolist:$CIRCLE_BUILD_NUM raychuranirav/todolist:latest
 
       # Push Docker image to Docker Hub (optional)
      
