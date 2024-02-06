@@ -52,6 +52,24 @@ jobs:
              echo "$DOCKER_PAT" | docker login -u "$DOCKER_USERNAME" --password-stdin
              docker push raychuranirav/todolist:$CIRCLE_BUILD_NUM
              docker push raychuranirav/todolist:latest
+             
+  sonarqube_analysis:
+    docker:
+      - image: sonarsource/sonar-scanner-cli
+
+    steps:
+      - checkout
+
+      # Run SonarQube analysis
+      - run:
+          name: SonarQube analysis
+          command: |
+            sonar-scanner \
+              -Dsonar.projectKey=$PROJECT_KEY \
+              -Dsonar.organization=$ORGANIZATION \
+              -Dsonar.host.url=$SONAR_URL \
+              -Dsonar.login=$SONAR_TOKEN
+
 
 workflows:
   version: 2
@@ -61,6 +79,7 @@ workflows:
       - dockerize:
           requires:
             - build
+            - sonarqube_analysis
           filters:
             branches:
               only: main
