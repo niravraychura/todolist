@@ -45,9 +45,9 @@ jobs:
       - run:
            name: Push Docker image to Docker Hub
            command: |
-             docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PAT"
-             docker push niravraychura/todolist:$CIRCLE_BUILD_NUM
-             docker push niravraychura/todolist:latest
+             docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PAT" --password-stdin
+             docker push raychuranirav/todolist:$CIRCLE_BUILD_NUM
+             docker push raychuranirav/todolist:latest
 
 workflows:
   version: 2
